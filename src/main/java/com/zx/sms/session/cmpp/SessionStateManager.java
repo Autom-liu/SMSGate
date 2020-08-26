@@ -16,15 +16,15 @@ import com.zx.sms.session.AbstractSessionStateManager;
 /**
  * @author Lihuanghe(18852780@qq.com) 消息发送窗口拜你控制和消息重发 ，消息持久化
  */
-public class SessionStateManager extends AbstractSessionStateManager<Long, Message> {
+public class SessionStateManager extends AbstractSessionStateManager<Integer, Message> {
 	private static final Logger logger = LoggerFactory.getLogger(SessionStateManager.class);
 
-	public SessionStateManager(EndpointEntity entity, ConcurrentMap<Long, VersionObject<Message>> storeMap, boolean preSend) {
+	public SessionStateManager(EndpointEntity entity, ConcurrentMap<Integer, VersionObject<Message>> storeMap, boolean preSend) {
 		super(entity, storeMap, preSend);
 	}
 
 	@Override
-	protected Long getSequenceId(Message msg) {
+	protected Integer getSequenceId(Message msg) {
 		return msg.getHeader().getSequenceId();
 	}
 
@@ -34,7 +34,7 @@ public class SessionStateManager extends AbstractSessionStateManager<Long, Messa
 			CmppSubmitResponseMessage submitResp = (CmppSubmitResponseMessage) res;
 			
 			if ((submitResp.getResult() != 0L) && (submitResp.getResult() != 8L)) {
-				logger.error("Send SubmitMsg ERR . Msg: {} ,Resp:{}", req, submitResp);
+				logger.error("Receive Err Response result: {} . Req: {} ,Resp:{}",submitResp.getResult(), req, submitResp);
 			}
 
 			return submitResp.getResult() == 8L;
@@ -42,7 +42,7 @@ public class SessionStateManager extends AbstractSessionStateManager<Long, Messa
 			CmppDeliverResponseMessage deliverResp = (CmppDeliverResponseMessage) res;
 
 			if ((deliverResp.getResult() != 0L) && (deliverResp.getResult() != 8L)) {
-				logger.error("Send DeliverMsg ERR . Msg: {} ,Resp:{}", req, deliverResp);
+				logger.error("Receive Err Response result: {} . Req: {} ,Resp:{}",deliverResp.getResult(), req, deliverResp);
 			}
 
 			return deliverResp.getResult() == 8L;

@@ -24,8 +24,6 @@ public enum EndpointManager implements EndpointManagerInterface {
 
 	private ConcurrentHashMap<String, EndpointEntity> idMap = new ConcurrentHashMap<String, EndpointEntity>();
 
-	private ConcurrentHashMap<String, EndpointConnector<?>> map = new ConcurrentHashMap<String, EndpointConnector<?>>();
-	
 	private volatile boolean started = false;
 
 	public synchronized void openEndpoint(EndpointEntity entity) {
@@ -37,11 +35,7 @@ public enum EndpointManager implements EndpointManagerInterface {
 			addEndpointEntity(entity);
 		}
 
-		EndpointConnector<?> conn = map.get(entity.getId());
-		if (conn == null){
-			conn = entity.buildConnector();
-			map.put(entity.getId(), conn);
-		}
+		EndpointConnector<?> conn = entity.getSingletonConnector();
 
 		try {
 			conn.open();
@@ -51,25 +45,15 @@ public enum EndpointManager implements EndpointManagerInterface {
 	}
 
 	public synchronized void close(EndpointEntity entity) {
-		EndpointConnector<?> conn = map.get(entity.getId());
+		EndpointConnector<?> conn = entity.getSingletonConnector();
 		if (conn == null)
 			return;
 		try {
 			conn.close();
-			// 关闭所有连接，并把Connector删掉
-			map.remove(entity.getId());
 
 		} catch (Exception e) {
 			logger.error("close Error", e);
 		}
-	}
-
-	public EndpointConnector<?> getEndpointConnector(EndpointEntity entity) {
-		return map.get(entity.getId());
-	}
-
-	public EndpointConnector<?> getEndpointConnector(String entityId) {
-		return map.get(entityId);
 	}
 
 	public EndpointEntity getEndpointEntity(String id) {
@@ -109,45 +93,63 @@ public enum EndpointManager implements EndpointManagerInterface {
 	}
 
 	public void close() {
+		stopConnectionCheckTask();
 		for (EndpointEntity en : endpoints) {
 			close(en);
 		}
+		
 	}
-	
-	public void stopConnectionCheckTask(){
+
+	public void stopConnectionCheckTask() {
 		started = false;
 	}
-	public void startConnectionCheckTask(){
-		if(started) return ;
-		
+
+	public void startConnectionCheckTask() {
+		if (started)
+			return;
+
 		started = true;
-		//每秒检查一次所有连接，不足数目的就新建一个连接
-		EventLoopGroupFactory.INS.submitUnlimitCircleTask(new Callable<Boolean>(){
+		// 每秒检查一次所有连接，不足数目的就新建一个连接
+		EventLoopGroupFactory.INS.submitUnlimitCircleTask(new Callable<Boolean>() {
 
 			@Override
 			public Boolean call() throws Exception {
-				for(Map.Entry<String, EndpointConnector<?>> entry: map.entrySet()){
-					EndpointConnector conn = entry.getValue();
-					EndpointEntity entity = conn.getEndpointEntity();
-					int max = entity.getMaxChannels();
-					int actual = conn.getConnectionNum();
-					
-					//客户端重连
-					if(entity instanceof ClientEndpoint && actual < max){
-						logger.debug("open connection {}",entity);
-						conn.open();
+				for (Map.Entry<String, EndpointEntity> entry : idMap.entrySet()) {
+
+					EndpointEntity entity = entry.getValue();
+					if (entity instanceof ClientEndpoint) {
+						EndpointConnector conn = entity.getSingletonConnector();
+						int max = entity.getMaxChannels();
+						int actual = conn.getConnectionNum();
+						// 客户端重连
+						if (actual < max) {
+							logger.debug("open connection {}", entity);
+							conn.open();
+						}
 					}
 				}
 				return started;
 			}
-			
-		}, new ExitUnlimitCirclePolicy<Boolean>(){
+
+		}, new ExitUnlimitCirclePolicy<Boolean>() {
 
 			@Override
 			public boolean notOver(Future<Boolean> future) {
 				return started;
 			}
-			
+
 		}, 1000);
+	}
+
+	@Override
+	public EndpointConnector getEndpointConnector(EndpointEntity entity) {
+
+		return entity.getSingletonConnector();
+	}
+
+	@Override
+	public EndpointConnector getEndpointConnector(String id) {
+		EndpointEntity entity = getEndpointEntity(id);
+		return entity == null ? null : entity.getSingletonConnector();
 	}
 }

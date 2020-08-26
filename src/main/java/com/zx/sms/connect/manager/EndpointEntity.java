@@ -2,6 +2,8 @@ package com.zx.sms.connect.manager;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import com.zx.sms.handler.api.BusinessHandlerInterface;
 
@@ -20,7 +22,7 @@ public abstract class EndpointEntity implements Serializable {
 	 */
 	private String Desc;
     
-	private ChannelType channelType;
+	private ChannelType channelType = ChannelType.DUPLEX;
 	private String host;
 	private Integer port;
 	
@@ -75,6 +77,13 @@ public abstract class EndpointEntity implements Serializable {
 	
 	private boolean useSSL = false;
 	private String proxy;
+	
+	private volatile EndpointConnector connector;
+	
+	/**
+	 *增加客户端IP校验配置 
+	 */
+	private List<String> allowedAddr;
 	
     public String getProxy() {
 		return proxy;
@@ -210,6 +219,14 @@ public abstract class EndpointEntity implements Serializable {
 	public void setCloseWhenRetryFailed(boolean closeWhenRetryFailed) {
 		this.closeWhenRetryFailed = closeWhenRetryFailed;
 	}
+	
+	
+	public List<String> getAllowedAddr() {
+		return allowedAddr;
+	}
+	public void setAllowedAddr(List<String> allowedAddr) {
+		this.allowedAddr = allowedAddr;
+	}
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -233,8 +250,22 @@ public abstract class EndpointEntity implements Serializable {
 			return false;
 		return true;
 	}
+	public  <T extends EndpointConnector<EndpointEntity>> T getSingletonConnector() {
+		if(connector!=null) {
+			return (T)connector;
+		}else {
+			synchronized (this) {
+				if(connector!=null) {
+					return (T)connector;
+				}else {
+					connector = buildConnector();
+					return (T)connector;
+				}
+			}
+		}
+	}
 	
-	abstract public  <T extends EndpointConnector<EndpointEntity>> T buildConnector();
+	abstract protected <T extends EndpointConnector<EndpointEntity>> T buildConnector();
 	@Override
 	public String toString() {
 		return "EndpointEntity [Id=" + Id + ", Desc=" + Desc + ", channelType="

@@ -11,27 +11,30 @@ public class SMGPServerChildEndpointEntity extends SMGPEndpointEntity implements
 	 */
 	private static final long serialVersionUID = 6946326952395639937L;
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public SMGPServerChildEndpointConnector buildConnector() {
+	protected SMGPServerChildEndpointConnector buildConnector() {
 		return new SMGPServerChildEndpointConnector(this);
 	}
 
 	@Override
 	public void addchild(EndpointEntity entity) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void removechild(EndpointEntity entity) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public EndpointEntity getChild(String userName) {
-		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public EndpointEntity getChild(String userName, ChannelType chType) {
+		return null;
+	}
+
 
 }

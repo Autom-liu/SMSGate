@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.zx.sms.BaseMessage;
 import com.zx.sms.codec.smgp.tlv.TLV;
+import com.zx.sms.codec.smgp.tlv.TLVOctets;
 import com.zx.sms.codec.smgp.util.ByteUtil;
 import com.zx.sms.common.util.CachedMillisecondClock;
 import com.zx.sms.common.util.DefaultSequenceNumberUtil;
@@ -22,7 +23,7 @@ public abstract class SMGPBaseMessage implements BaseMessage ,Cloneable{
 
 	protected int commandId = 0;
 
-	protected long sequenceNumber = DefaultSequenceNumberUtil.getSequenceNo(); 
+	protected int sequenceNumber = DefaultSequenceNumberUtil.getSequenceNo(); 
 	
 	protected List<TLV> optionalParameters = new ArrayList<TLV>();
 	
@@ -72,7 +73,7 @@ public abstract class SMGPBaseMessage implements BaseMessage ,Cloneable{
 		offset+=4;
 		ByteUtil.int2byte(commandId, bytes, offset);
 		offset+=4;
-		ByteUtil.int2byte((int)sequenceNumber, bytes, offset);
+		ByteUtil.int2byte(sequenceNumber, bytes, offset);
 		offset+=4;
 		
 		System.arraycopy(bodyBytes, 0, bytes, offset, bodyBytes.length);
@@ -100,7 +101,10 @@ public abstract class SMGPBaseMessage implements BaseMessage ,Cloneable{
 			tag = ByteUtil.byte2short(buffer, offset);
 			offset += 2;
 			tlv = findOptional(tag);
-			if(tlv==null)break; //ignore error
+			if(tlv==null) {
+				//未知的TLV
+				tlv = new TLVOctets(tag); 
+			}
 			length = ByteUtil.byte2short(buffer, offset);
 			offset += 2;
 			byte[] valueBytes = new byte[length];
@@ -187,16 +191,14 @@ public abstract class SMGPBaseMessage implements BaseMessage ,Cloneable{
 		this.commandLength = commandLength;
 	}
 
-	public void setSequenceNumber(long sequenceNumber) {
-		this.sequenceNumber = sequenceNumber;
-	}
+
 
 
 	public String sequenceString(){
 		StringBuffer buffer=new StringBuffer();
 		int offset=0;
 		byte[] seqBytes=new byte[8];
-		System.arraycopy(ByteUtil.int2byte((int)sequenceNumber), offset, seqBytes, 4, 4);
+		System.arraycopy(ByteUtil.int2byte(sequenceNumber), offset, seqBytes, 4, 4);
 		buffer.append(ByteUtil.byte2long(seqBytes));
 		return buffer.toString();
 		
@@ -244,17 +246,17 @@ public abstract class SMGPBaseMessage implements BaseMessage ,Cloneable{
 	}
 
 	@Override
-	public long getSequenceNo() {
+	public int getSequenceNo() {
 		return sequenceNumber;
 	}
 	
-	public void setSequenceNo(long seq) {
+	public void setSequenceNo(int seq) {
 		 sequenceNumber=seq;
 	}
 
 	protected SMGPBaseMessage clone() throws CloneNotSupportedException {
 		SMGPBaseMessage msg =  (SMGPBaseMessage) super.clone();
-		msg.setSequenceNumber(sequenceNumber);
+		msg.setSequenceNo(sequenceNumber);
 		msg.setCommandId(commandId);
 		return msg;
 	}

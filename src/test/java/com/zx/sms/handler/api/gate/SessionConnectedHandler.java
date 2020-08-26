@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.zx.sms.BaseMessage;
 import com.zx.sms.common.util.ChannelUtil;
+import com.zx.sms.connect.manager.EndpointManager;
 import com.zx.sms.connect.manager.EventLoopGroupFactory;
 import com.zx.sms.connect.manager.ExitUnlimitCirclePolicy;
 import com.zx.sms.handler.api.AbstractBusinessHandler;
@@ -52,9 +53,9 @@ public abstract class SessionConnectedHandler extends AbstractBusinessHandler {
 
 	@Override
 	public void userEventTriggered(final ChannelHandlerContext ctx, Object evt) throws Exception {
-		final AtomicInteger tmptotal = new AtomicInteger(totleCnt.get());
+		final AtomicInteger tmptotal = totleCnt;
 		if (evt == SessionState.Connect) {
-
+					
 			final Channel ch = ctx.channel();
 			EventLoopGroupFactory.INS.submitUnlimitCircleTask(new Callable<Boolean>() {
 

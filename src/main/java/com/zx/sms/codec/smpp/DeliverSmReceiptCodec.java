@@ -10,6 +10,11 @@ import com.zx.sms.codec.smpp.msg.DeliverSmReceipt;
 
 public class DeliverSmReceiptCodec extends MessageToMessageCodec<DeliverSm, DeliverSmReceipt> {
 
+	DeliverSmReceiptCodec()
+	{
+		super();
+	}
+	
 	@Override
 	protected void encode(ChannelHandlerContext ctx, DeliverSmReceipt msg, List<Object> out) throws Exception {
 		DeliverSm pdu = new DeliverSm();
@@ -28,6 +33,7 @@ public class DeliverSmReceiptCodec extends MessageToMessageCodec<DeliverSm, Deli
         pdu.setDataCoding(msg.getDataCoding());
         pdu.setDefaultMsgId(msg.getDefaultMsgId());
         pdu.setShortMessage(msg.getShortMessage());
+        pdu.setMsglength((short)msg.getShortMessage().length);
         if(msg.getOptionalParameters()!=null)
         	for(Tlv tlv:msg.getOptionalParameters()){
         		pdu.addOptionalParameter(tlv);

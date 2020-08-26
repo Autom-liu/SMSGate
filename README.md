@@ -10,7 +10,7 @@
 <dependency>
   <groupId>com.chinamobile.cmos</groupId>
   <artifactId>sms-core</artifactId>
-  <version>2.1.10</version>
+  <version>2.1.12.1</version>
 </dependency>
 ```
 
@@ -21,7 +21,7 @@
   短信协议是tcp长连接，类似数据库连接，如jdbc-connection. 所以发送短信前必须要先有一个短信连接。因此你需要在程序启动时建立短信连接。参考demo里的client，调用manager.openEntity()方法，,调用manager.startConnectionCheckTask()开启断线重连。
   然后就像调用其它库一样，在需要发送短信的地方，new 一个对应的Message,调用
   
-  Future f = ChannelUtil.syncWriteLongMsgToEntity([clientEntityId],message)方法发送，`要判断f是否为Null，为Null表示发送失败`。
+  List< Future > f = ChannelUtil.syncWriteLongMsgToEntity([clientEntityId],message)方法发送，`要判断f是否为Null，为Null表示发送失败,一条短信可能拆分成多条，因此返回List`。
 
 - `如何发送长短信？`
 
@@ -40,11 +40,11 @@
   
   如果你不了解netty, 你只需知道：
   
-  当连接刚刚建立时，smsgate会自动调用handler里的userEventTriggered方法；
+  当连接刚刚建立时[指登陆验证成功]，smsgate会自动调用handler里的userEventTriggered方法，因此在此方法中可以开启一个Consumer去消费MQ里的消息发送到网络连接上；
   
-  当对方发送任一消息给你时，smsgate会自动调用handler里的channelRead方法；
+  当对方发送任意一个消息给你时[包括request,response消息]，smsgate会自动调用handler里的channelRead方法，因此可在此方法内接收消息并作处理业务，但避免作非常耗时的操作，会影响netty的处理效率，甚至完全耗完netty的io线程造成消息不响应；
   
-  当连接关闭时，smsgate会自动调用handler里的channelInactive方法
+  当连接关闭时，smsgate会自动调用handler里的channelInactive方法，可在此方法中实现连接关闭后的一些清理操作。
 
 - `如何不改源码，实现修改框架默认的handler`
 
@@ -58,6 +58,18 @@
   
   4、最后在openEntity通道里，new MySgipClientEndpointEntity就可以了
 
+- `使用 http 或者 socks 代理`
+
+  SmsGate支持HTTP、SOCKS代理以方便在使用代理访问服务器的情况。代理设置方式：
+
+```
+	// 无username 和 password 可写为  http://ipaddress:port
+	client.setProxy("http://username:password@ipaddress:port");  //http代理
+	client.setProxy("socks4://username:password@ipaddress:port");  //socks4代理
+	client.setProxy("socks5://username:password@ipaddress:port");  //socks5代理
+
+```
+
 # 新手指引
 
 - 先看doc目录下的`CMPP接口协议V3.0.0.doc`文档 (看不懂的到群里咨询)
@@ -65,6 +77,12 @@
 - 导入工程后，运行测试demo: TestCMPPEndPoint，学会配置账号密码等参数
 - 由于代码是基于netty网络框架，您有必要先有一些Netty的基础
 
+# 哪些企业在使用
+
+|企业名称|企业介绍|使用版本|使用协议|
+|:-----:|:------:|:-----:|:------:|
+| 中移在线 | 中国移动集团专业公司 | 2.1.11 | CMPP|
+|||||
 
 # 开发短信网关的常见问题
 
@@ -138,7 +156,7 @@ smgp的协议解析代码是从 [SMS-China 的代码 ](https://github.com/clonal
 ## CMPP的连接端口
 
 `com.zx.sms.connect.manager.cmpp.CMPPEndpointEntity`
-表示一个Tcp连接的发起端，或者接收端。用来记录连接的IP.port,以及CMPP协议的用户名，密码，业务处理的ChannelHandler集合等其它端口参数。包含三个字类：
+表示一个Tcp连接的发起端，或者接收端。用来记录连接的IP.port,以及CMPP协议的用户名，密码，业务处理的ChannelHandler集合等其它端口参数。包含三个子类：
 
 1. com.zx.sms.connect.manager.cmpp.CMPPServerEndpointEntity
 服务监听端口，包含一个List<CMPPServerChildEndpointEntity>属性。 一个服务端口包含多个CMPPServerChildEndpointEntity端口
@@ -193,16 +211,16 @@ CMPPMessageCodecAggregator [这是3.0协议]
 6. TCP连接建立完成后。netty会调用EndpointConnector.initPipeLine()方法初始化PipeLine，把CMPP协议解析器，SessionLoginManager加到PipeLine里去，然后netty触发ChannelActive事件。
 7. 在SessionLoginManager类里，客户端收到ChannelActive事件后会发送一个CMPPConnnect消息，请求建立CMPP连接.
 8. 同样在SessionLoginManager.channelRead()方法里,服务端会收到CMPPConnnect消息，开始对用户名，密码进行鉴权，并给客户端鉴权结果。
-9. 鉴权通过后，SessionLoginManager调用EndpointConnector.addChannel(channel)方法，把channel加入ArrayList,并给pipeLine上挂载SessionStateManager和业务处理的ChannelHandler。
+9. 鉴权通过后，SessionLoginManager调用EndpointConnector.addChannel(channel)方法，把channel加入ArrayList,并给pipeLine上挂载SessionStateManager和业务处理的ChannelHandler，如心跳处理，日志记录，长短信合并拆分处理类。
 10. EndpointConnector.addChannel(channel)完成后，SessionLoginManager调用ctx.fireUserEventTriggered()方法，触发	SessionState.Connect事件。
 
 以上CMPP连接建立完成。
 
-11. 业务处理类收到SessionState.Connect事件，开始业务处理，如下发短信。
+11. 业务处理类收到SessionState.Connect事件，开始业务处理，如从MQ获取短信下发，或开启Consumer接收MQ推送的消息。
 12. SessionStateManager会拦截所有read()和write()的消息，进行消息持久化，消息重发，流量控制。
 
 ## 增加同步调用api
-smsgate自开发以来，一直使用netty的异步发送消息，但实际使用场景中同步发送消息的更方便，或者能方便的取到response。因此增加一个同步调用的api。即：发送消息后等接收到对应的响应后才完成。
+smsgate自开发以来，一直使用netty的异步发送消息，但实际使用场景中同步发送消息的更方便，或者能方便的取到response。因此增加一个同步调用的api。即：发送消息后等接收到对应的响应后才返回。
 使用方法如下：
 
 ```java

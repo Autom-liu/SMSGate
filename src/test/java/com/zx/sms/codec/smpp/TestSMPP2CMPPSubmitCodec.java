@@ -75,9 +75,8 @@ public class TestSMPP2CMPPSubmitCodec extends AbstractSMPPTestMessageCodec<CmppS
 	@Test
 	public void testASCIIcode()
 	{
-		testlongCodec(createTestReq("12345678901AssBC56789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"));
+		testlongCodec(createTestReq("12345678901AssBC56789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890abcdefghijklmnopqrstuvwxyzABCE"));
 	}
-	
 	
 	
 	@Test
@@ -170,8 +169,8 @@ public class TestSMPP2CMPPSubmitCodec extends AbstractSMPPTestMessageCodec<CmppS
 	    	copybuf.writeBytes(buf.copy());
 			int length = buf.readableBytes();
 			
-			Assert.assertEquals(length, buf.readUnsignedInt());
-			Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readUnsignedInt());
+			Assert.assertEquals(length, buf.readInt());
+			Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readInt());
 			
 
 			buf =(ByteBuf)channel().readOutbound();
@@ -193,8 +192,8 @@ public class TestSMPP2CMPPSubmitCodec extends AbstractSMPPTestMessageCodec<CmppS
 	    	copybuf.writeBytes(buf.copy());
 			int length = buf.readableBytes();
 			
-			Assert.assertEquals(length, buf.readUnsignedInt());
-			Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readUnsignedInt());
+			Assert.assertEquals(length, buf.readInt());
+			Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readInt());
 
 			buf =(ByteBuf)channel().readOutbound();
 	    }

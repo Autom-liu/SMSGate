@@ -11,8 +11,8 @@ public class DefaultHeader implements Header {
 	private long headLength;
     private long packetLength;
     private long bodyLength;
-    private long commandId;
-    private long sequenceId;
+    private int commandId;
+    private int sequenceId;
     private long nodeId;
 
     @Override
@@ -46,23 +46,23 @@ public class DefaultHeader implements Header {
     }
 
      @Override
-    public void setCommandId(long commandId) {
+    public void setCommandId(int commandId) {
         this.commandId = commandId;
     }
 
      @Override
-    public long getCommandId() {
+    public int getCommandId() {
         return commandId;
     }
 
 
     @Override
-    public void setSequenceId(long transitionId) {
+    public void setSequenceId(int transitionId) {
         this.sequenceId = transitionId;
     }
 
     @Override
-    public long getSequenceId() {
+    public int getSequenceId() {
         return sequenceId;
     }
 
@@ -70,7 +70,7 @@ public class DefaultHeader implements Header {
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("DefaultHeader [commandId=0x");
-		builder.append(Long.toHexString(commandId));
+		builder.append(Integer.toHexString(commandId));
 		builder.append(", sequenceId=");
 		builder.append(sequenceId);
 		builder.append(", nodeId=");

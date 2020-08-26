@@ -46,7 +46,7 @@ public class Cmpp20SubmitRequestMessageCodec extends MessageToMessageCodec<Messa
 
 	@Override
 	protected void decode(ChannelHandlerContext ctx, Message msg, List<Object> out) throws Exception {
-		long commandId = ((Long) msg.getHeader().getCommandId()).longValue();
+		int commandId =  msg.getHeader().getCommandId();
 		if (packetType.getCommandId() != commandId) {
 			// 不解析，交给下一个codec
 			out.add(msg);
@@ -96,7 +96,7 @@ public class Cmpp20SubmitRequestMessageCodec extends MessageToMessageCodec<Messa
 		// requestMessage.setDestterminaltype(bodyBuffer.readUnsignedByte());//CMPP2.0
 		// 无该字段 不进行编解码
 
-		short msgLength = (short)(LongMessageFrameHolder.getPayloadLength(requestMessage.getMsgfmt().getAlphabet(),bodyBuffer.readUnsignedByte()) & 0xffff);
+		short msgLength = (short)(bodyBuffer.readUnsignedByte() & 0xffff);
 
 		byte[] contentbytes = new byte[msgLength];
 		bodyBuffer.readBytes(contentbytes);

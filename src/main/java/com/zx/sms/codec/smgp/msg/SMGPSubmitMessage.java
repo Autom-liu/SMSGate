@@ -583,12 +583,12 @@ public class SMGPSubmitMessage extends SMGPBaseMessage implements LongSMSMessage
 		SMGPSubmitMessage requestMessage = this.clone();
 
 		requestMessage.setTpUdhi((byte)frame.getTpudhi());
-		requestMessage.setMsgFmt(frame.getMsgfmt());
+		requestMessage.setMsgFmt((SmsDcs)frame.getMsgfmt());
 		requestMessage.setBMsgContent(frame.getMsgContentBytes());
 		requestMessage.setPkTotal((byte)frame.getPktotal());
 		requestMessage.setPkNumber((byte)frame.getPknumber());
 		if(frame.getPknumber()!=1){
-			requestMessage.setSequenceNumber(DefaultSequenceNumberUtil.getSequenceNo());
+			requestMessage.setSequenceNo(DefaultSequenceNumberUtil.getSequenceNo());
 		}
 		requestMessage.setMsgContent((SmsMessage)null);
 		return requestMessage;

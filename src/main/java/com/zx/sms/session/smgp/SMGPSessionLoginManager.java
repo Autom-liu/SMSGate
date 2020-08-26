@@ -67,14 +67,15 @@ public class SMGPSessionLoginManager extends AbstractSessionLoginManager {
 			byte loginMode = message.getLoginMode();
 			if (entity instanceof SMGPServerEndpointEntity) {
 				SMGPServerEndpointEntity serverEntity = (SMGPServerEndpointEntity) entity;
-				EndpointEntity end =  serverEntity.getChild(username.trim());
-				if(end == null) return null;
 				
-				if(end.getChannelType()==ChannelType.DOWN && loginMode == 0){
+				if(loginMode == 0){
+					EndpointEntity end =  serverEntity.getChild(username.trim(),ChannelType.DOWN);
 					return end;
-				}else if(end.getChannelType()==ChannelType.UP && loginMode == 1){
+				}else if(loginMode == 1){
+					EndpointEntity end =  serverEntity.getChild(username.trim(),ChannelType.UP);
 					return end;
-				}else if(end.getChannelType()==ChannelType.DUPLEX && loginMode == 2){
+				}else if(loginMode == 2){
+					EndpointEntity end =  serverEntity.getChild(username.trim(),ChannelType.DUPLEX);
 					return end;
 				}
 			}
@@ -147,7 +148,7 @@ public class SMGPSessionLoginManager extends AbstractSessionLoginManager {
 		
 		SMGPLoginMessage req = (SMGPLoginMessage)message;
 		SMGPLoginRespMessage resp = new SMGPLoginRespMessage();
-		resp.setSequenceNumber(req.getSequenceNo());
+		resp.setSequenceNo(req.getSequenceNo());
 		resp.setStatus(0);
 		resp.setVersion(smgpentity.getClientVersion());
 		resp.setServerAuth(DigestUtils.md5(Bytes.concat(Ints.toByteArray((int)resp.getStatus()), req.getClientAuth(), smgpentity
@@ -163,7 +164,7 @@ public class SMGPSessionLoginManager extends AbstractSessionLoginManager {
 			SMGPLoginMessage message = (SMGPLoginMessage)msg;
 			// 认证失败
 			SMGPLoginRespMessage resp = new SMGPLoginRespMessage();
-			resp.setSequenceNumber(message.getSequenceNo());
+			resp.setSequenceNo(message.getSequenceNo());
 			resp.setStatus((int)status);
 			ChannelFuture promise = ctx.writeAndFlush(resp);
 

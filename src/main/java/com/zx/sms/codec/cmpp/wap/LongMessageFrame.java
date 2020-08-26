@@ -1,6 +1,6 @@
 package com.zx.sms.codec.cmpp.wap;
 
-import org.marre.sms.SmsDcs;
+import org.marre.sms.AbstractSmsDcs;
 
 import com.zx.sms.common.GlobalConstance;
 
@@ -13,8 +13,7 @@ public class LongMessageFrame {
 	private short pknumber = 1;
 	private short tppid = 0;// 0是普通GSM 类型，点到点方式 ,127 :写sim卡
 	private short tpudhi = 0; // 0:msgcontent不带协议头。1:带有协议头
-	private SmsDcs msgfmt = GlobalConstance.defaultmsgfmt;
-	private short msgLength = 140;
+	private AbstractSmsDcs msgfmt = GlobalConstance.defaultmsgfmt;
 	// encode septet
 	private byte[] msgContentBytes = GlobalConstance.emptyBytes;
 
@@ -78,7 +77,7 @@ public class LongMessageFrame {
 	/**
 	 * @return the msgfmt
 	 */
-	public SmsDcs getMsgfmt() {
+	public AbstractSmsDcs getMsgfmt() {
 		return msgfmt;
 	}
 
@@ -86,7 +85,7 @@ public class LongMessageFrame {
 	 * @param msgfmt
 	 *            the msgfmt to set
 	 */
-	public void setMsgfmt(SmsDcs msgfmt) {
+	public void setMsgfmt(AbstractSmsDcs msgfmt) {
 		this.msgfmt = msgfmt;
 	}
 
@@ -94,11 +93,11 @@ public class LongMessageFrame {
 	 * @return the msgLength
 	 */
 	public short getMsgLength() {
-		return msgLength;
+		return (short)msgContentBytes.length;
 	}
 
 	public void setMsgLength(short msgLength) {
-		this.msgLength = msgLength;
+		
 	}
 
 	/**
@@ -136,23 +135,12 @@ public class LongMessageFrame {
 	// get unencode septet bytes
 	public byte[] getPayloadbytes(int udhl) {
 		if (udhl > 0) {
-			int payloadlength = msgLength - udhl - 1;
+			int payloadlength = getMsgLength() - udhl - 1;
 			byte[] payload = new byte[payloadlength];
 			System.arraycopy(msgContentBytes, udhl + 1, payload, 0, payloadlength);
-			// 如果是7bit编码.先转成8bit编码
-			switch (this.msgfmt.getAlphabet()) {
-			case GSM:
-				return LongMessageFrameHolder.octetStream2septetStream(payload);
-			default:
-				return payload;
-			}
+			return payload;
 		} else {
-			switch (this.msgfmt.getAlphabet()) {
-			case GSM:
-				return LongMessageFrameHolder.octetStream2septetStream(msgContentBytes);
-			default:
-				return msgContentBytes;
-			}
+			return msgContentBytes;
 		}
 	}
 }

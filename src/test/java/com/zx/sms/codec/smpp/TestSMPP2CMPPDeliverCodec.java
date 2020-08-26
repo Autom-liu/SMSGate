@@ -1,14 +1,5 @@
 package com.zx.sms.codec.smpp;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelPipeline;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
-import io.netty.util.ResourceLeakDetector;
-import io.netty.util.ResourceLeakDetector.Level;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.marre.sms.SmsMessage;
@@ -26,6 +17,15 @@ import com.zx.sms.common.util.MsgId;
 import com.zx.sms.connect.manager.smpp.SMPPCodecChannelInitializer;
 import com.zx.sms.handler.smpp.SMPP2CMPPBusinessHandler;
 import com.zx.sms.handler.smpp.SMPPLongMessageHandler;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.ResourceLeakDetector;
+import io.netty.util.ResourceLeakDetector.Level;
 
 public class TestSMPP2CMPPDeliverCodec extends AbstractSMPPTestMessageCodec<CmppDeliverRequestMessage> {
 	protected void doinitChannel(Channel ch){
@@ -96,7 +96,7 @@ public class TestSMPP2CMPPDeliverCodec extends AbstractSMPPTestMessageCodec<Cmpp
 		msg.setServiceid("10086");
 		msg.setSrcterminalId("13800138000");
 		msg.setSrcterminalType((short) 1);
-		header.setSequenceId(System.nanoTime() & 0x7fffffff);
+		header.setSequenceId((int)System.nanoTime());
 		return msg;
 	}
 	
@@ -110,10 +110,10 @@ public class TestSMPP2CMPPDeliverCodec extends AbstractSMPPTestMessageCodec<Cmpp
 	@Test
 	public void testASCIIcode()
 	{
-		CmppDeliverRequestMessage msg = createTestReq("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
+		CmppDeliverRequestMessage msg = createTestReq("12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901");
 		testlongCodec(msg);
 	}
-	
+
 	@Test
 	public void testSLPUSH()
 	{
@@ -164,8 +164,8 @@ public class TestSMPP2CMPPDeliverCodec extends AbstractSMPPTestMessageCodec<Cmpp
 	    	copybuf.writeBytes(buf.copy());
 			int length = buf.readableBytes();
 			
-			Assert.assertEquals(length, buf.readUnsignedInt());
-			Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readUnsignedInt());
+			Assert.assertEquals(length, buf.readInt());
+			Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readInt());
 			
 
 			buf =(ByteBuf)channel().readOutbound();
@@ -190,8 +190,8 @@ public class TestSMPP2CMPPDeliverCodec extends AbstractSMPPTestMessageCodec<Cmpp
 	    	copybuf.writeBytes(buf.copy());
 			int length = buf.readableBytes();
 			
-			Assert.assertEquals(length, buf.readUnsignedInt());
-			Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readUnsignedInt());
+			Assert.assertEquals(length, buf.readInt());
+			Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readInt());
 			
 
 			buf =(ByteBuf)channel().readOutbound();

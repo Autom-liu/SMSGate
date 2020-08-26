@@ -38,9 +38,9 @@ public class TestCmppSubmitRequestMessageCodec  extends AbstractTestMessageCodec
 		
 		int length = buf.readableBytes();
 		
-		Assert.assertEquals(length, buf.readUnsignedInt());
-		Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readUnsignedInt());
-		Assert.assertEquals(msg.getHeader().getSequenceId(), buf.readUnsignedInt());
+		Assert.assertEquals(length, buf.readInt());
+		Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readInt());
+		Assert.assertEquals(msg.getHeader().getSequenceId(), buf.readInt());
 		
 	
 		
@@ -62,7 +62,7 @@ public class TestCmppSubmitRequestMessageCodec  extends AbstractTestMessageCodec
 	@Test
 	public void testASCIIcode()
 	{
-		testlongCodec(createTestReq("12345678901AssBC56789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"));
+		testlongCodec(createTestReq("12345678901AssBC56789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890abcdefghijklmnopqrstuvwxyzABCE"));
 	}
 	
 	
@@ -156,8 +156,8 @@ public class TestCmppSubmitRequestMessageCodec  extends AbstractTestMessageCodec
 	    	copybuf.writeBytes(buf.copy());
 			int length = buf.readableBytes();
 			
-			Assert.assertEquals(length, buf.readUnsignedInt());
-			Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readUnsignedInt());
+			Assert.assertEquals(length, buf.readInt());
+			Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readInt());
 			
 
 			buf =(ByteBuf)channel().readOutbound();
@@ -182,8 +182,8 @@ public class TestCmppSubmitRequestMessageCodec  extends AbstractTestMessageCodec
 	    	copybuf.writeBytes(buf.copy());
 			int length = buf.readableBytes();
 			
-			Assert.assertEquals(length, buf.readUnsignedInt());
-			Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readUnsignedInt());
+			Assert.assertEquals(length, buf.readInt());
+			Assert.assertEquals(msg.getPacketType().getCommandId(), buf.readInt());
 			
 
 			buf =(ByteBuf)channel().readOutbound();

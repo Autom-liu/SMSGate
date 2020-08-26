@@ -1,10 +1,6 @@
 package com.zx.sms.codec.smpp.msg;
 
-import io.netty.buffer.ByteBuf;
-
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.zx.sms.codec.smpp.SmppInvalidArgumentException;
 
@@ -132,16 +128,4 @@ public class DeliverSmReceipt extends DeliverSm {
     	super.setShortMessage(value);
     }
     
-	private byte[] byteBufreadarray(ByteBuf buf){
-		byte[] dst = new byte[ buf.readableBytes()];
-		buf.readBytes(dst);
-		return dst;
-	}
-
-	@Override
-	public String toString() {
-		return "DeliverSmReceipt [id=" + id + ", sub=" + sub + ", dlvrd=" + dlvrd + ", submit_date=" + submit_date + ", done_date=" + done_date + ", stat="
-				+ stat + ", err=" + err + ", text=" + text + "]";
-	}
-	
 }

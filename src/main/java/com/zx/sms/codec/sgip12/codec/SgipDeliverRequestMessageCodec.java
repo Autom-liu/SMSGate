@@ -47,7 +47,7 @@ public class SgipDeliverRequestMessageCodec extends MessageToMessageCodec<Messag
 	@Override
 	protected void decode(ChannelHandlerContext ctx, Message message, List<Object> out) throws Exception {
 
-		long commandId = ((Long) message.getHeader().getCommandId()).longValue();
+		int commandId =  message.getHeader().getCommandId();
 		if (packetType.getCommandId() != commandId) {
 			// 不解析，交给下一个codec
 			out.add(message);
@@ -66,7 +66,8 @@ public class SgipDeliverRequestMessageCodec extends MessageToMessageCodec<Messag
 		requestMessage.setTpudhi(bodyBuffer.readUnsignedByte());
 		requestMessage.setMsgfmt(new SmsDcs((byte) bodyBuffer.readUnsignedByte()));
 
-		int frameLength = LongMessageFrameHolder.getPayloadLength(requestMessage.getMsgfmt().getAlphabet(), bodyBuffer.readInt());
+		int frameLength = bodyBuffer.readInt();
+				
 
 		byte[] contentbytes = new byte[frameLength];
 		bodyBuffer.readBytes(contentbytes);
